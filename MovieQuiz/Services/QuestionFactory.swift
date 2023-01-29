@@ -7,7 +7,9 @@
 
 import UIKit
 
-class QuestionFactory {
+class QuestionFactory: QuestionFactoryProtocol {
+   
+    weak var delegate: QuestionFactoryDelegate?
     
     private let questions: [QuizQuestion] = [
         QuizQuestion(
@@ -52,10 +54,16 @@ class QuestionFactory {
             correctAnswer: false)
     ]
     
-    func requestNextQuestion() -> QuizQuestion? {
+    init(delegate: QuestionFactoryDelegate?) {
+        self.delegate = delegate
+    }
+    
+    func requestNextQuestion() {
         guard let index = (0..<questions.count).randomElement() else {
-            return nil
+            delegate?.didReceiveNextQuestion(question: nil)
+            return
         }
-        return questions[safe: index]
+        let question = questions[safe: index]
+        delegate?.didReceiveNextQuestion(question: question)
     }
 }
