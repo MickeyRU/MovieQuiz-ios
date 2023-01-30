@@ -25,6 +25,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // Текущий вопрос, отображаемый на экране
     private var currentQuestion: QuizQuestion?
     
+    // Алерт
+    private let alertPresenter = AlertPresenter()
+    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -76,26 +79,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         self.questionNumberLabel.text = "\(currentQuestionIndex + 1)/\(questionsAmount)"
     }
     
-    private func show(quiz result: QuizResultsViewModel) {
-        let alert = UIAlertController(title: result.title,
-                                      message: result.text,
-                                      preferredStyle: .alert)
-        
-        let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
-            guard let self = self else { return }
-            
-            self.currentQuestionIndex = 0
-            
-            // Скидываем счётчик правильных ответов
-            self.correctAnswers = 0
-            
-            // Заново показываем первый вопрос
-            self.questionFactory?.requestNextQuestion()
-        }
-        alert.addAction(action)
-        self.present(alert, animated: true, completion: nil)
-    }
-    
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         QuizStepViewModel(
             image: UIImage(named: model.image) ?? UIImage(),
@@ -127,12 +110,17 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func showNextQuestionOrResults() {
         if currentQuestionIndex == questionsAmount - 1 {
+            
             let text = "Ваш результат: \(correctAnswers) из \(questionsAmount)"
-            let viewModel = QuizResultsViewModel(
-                title: "Этот раунд окончен!",
-                text: text,
-                buttonText: "Сыграть ещё раз")
-            show(quiz: viewModel)
+            let alertModel = AlertModel(title: "Этот раунд окончен!", message: text, buttonText: "Сыграть ещё раз") { [weak self] _ in
+                guard let self = self else { return }
+                
+                self.currentQuestionIndex = 0
+                self.correctAnswers = 0
+                self.questionFactory?.requestNextQuestion()
+            }
+            
+            alertPresenter.showAlert(in: self, with: alertModel)            
         } else {
             currentQuestionIndex += 1
             questionFactory?.requestNextQuestion()
