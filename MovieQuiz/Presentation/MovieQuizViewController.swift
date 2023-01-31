@@ -28,6 +28,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // Алерт
     private let alertPresenter = AlertPresenter()
     
+    // Статистика
+    private let statisticService = StatisticServiceImplementation()
+    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -36,7 +39,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         questionFactory = QuestionFactory(delegate: self)
         
         questionFactory?.requestNextQuestion()
-        
     }
     
     // MARK: - QuestionFactoryDelegate
@@ -110,8 +112,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func showNextQuestionOrResults() {
         if currentQuestionIndex == questionsAmount - 1 {
-            
             let text = "Ваш результат: \(correctAnswers) из \(questionsAmount)"
+            //ToDo: - к самому алерту в поле message передать сформированный из рекордной игры текст.
+
             let alertModel = AlertModel(title: "Этот раунд окончен!", message: text, buttonText: "Сыграть ещё раз") { [weak self] _ in
                 guard let self = self else { return }
                 
@@ -119,7 +122,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
                 self.correctAnswers = 0
                 self.questionFactory?.requestNextQuestion()
             }
-            
             alertPresenter.showAlert(in: self, with: alertModel)            
         } else {
             currentQuestionIndex += 1
