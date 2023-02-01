@@ -7,16 +7,6 @@
 
 import UIKit
 
-struct GameRecord: Codable {
-    let correct: Int
-    let total: Int
-    let date: Date
-    
-    func compareRecords(previous game: GameRecord) -> Bool {
-        return game.correct > self.correct
-    }
-}
-
 protocol StatisticService {
     var totalAccuracy: Double { get }
     var gamesCount: Int { get }
@@ -27,60 +17,44 @@ protocol StatisticService {
 }
 
 final class StatisticServiceImplementation: StatisticService {
+    private let userDefaults = UserDefaults.standard
     
     private enum Keys: String {
         case correct, total, bestGame, gamesCount
     }
     
-    private let userDefaults = UserDefaults.standard
-    
     var totalAccuracy: Double {
         get {
-            guard let data = userDefaults.data(forKey: Keys.total.rawValue),
-                  let total = try? JSONDecoder().decode(Double.self, from: data) else {
-                return 0.0
-            }
-            return total
+            let correctAnswers = userDefaults.integer(forKey: Keys.correct.rawValue)
+            let totalAnswers = userDefaults.integer(forKey: Keys.total.rawValue)
+            return Double(correctAnswers * 100 / totalAnswers)
         }
         
-        set {
-            guard let data = try? JSONEncoder().encode(newValue) else {
-                print("Невозможно сохранить результат точности")
-                return
-            }
-            userDefaults.set(data, forKey: Keys.total.rawValue)
-        }
     }
     
     var gamesCount: Int {
         get {
-            guard let data = userDefaults.data(forKey: Keys.gamesCount.rawValue),
-                  let count = try? JSONDecoder().decode(Int.self, from: data) else {
-                return 0
-            }
-            return count
+            userDefaults.integer(forKey: Keys.gamesCount.rawValue)
         }
         
         set {
-            guard let data = try? JSONEncoder().encode(newValue) else {
-                print("Невозможно сохранить результат количество сыгранных игр")
-                return
-            }
-            userDefaults.set(data, forKey: Keys.gamesCount.rawValue)
+            userDefaults.set(newValue, forKey: Keys.gamesCount.rawValue)
         }
     }
     
     var bestGame: GameRecord {
         get {
             guard let data = userDefaults.data(forKey: Keys.bestGame.rawValue),
-                  let record = try? JSONDecoder().decode(GameRecord.self, from: data) else {
+                  let record = try? JSONDecoder().decode(GameRecord.self, from: data)
+            else {
                 return .init(correct: 0, total: 0, date: Date())
             }
             return record
         }
         
         set {
-            guard let data = try? JSONEncoder().encode(newValue) else {
+            guard let data = try? JSONEncoder().encode(newValue)
+            else {
                 print("Невозможно сохранить результат лучшей игры")
                 return
             }
@@ -88,11 +62,23 @@ final class StatisticServiceImplementation: StatisticService {
         }
     }
     
+    
+    // Сохранение текущего результата игры
     func store(correct count: Int, total amount: Int) {
+        // Сверяем текущий результат игры с сохранненым рекордом
+        let currentGameResult = GameRecord(correct: count, total: amount, date: Date())
+        if bestGame.isNotRecordAnymore(new: currentGameResult) {
+            bestGame = currentGameResult
+        }
+        gamesCount += 1
         
-        // ToDo: - реализовать функцию сохранения лучшего результата store (с проверкой на то, что новый результат лучше сохранённого в User Defaults),
+        var savedCorrectAnswers = userDefaults.integer(forKey: Keys.correct.rawValue)
+        savedCorrectAnswers += count
+        userDefaults.set(savedCorrectAnswers, forKey: Keys.correct.rawValue)
         
+        var savedTotalAnswers = userDefaults.integer(forKey: Keys.total.rawValue)
+        savedTotalAnswers += amount
+        userDefaults.set(savedTotalAnswers, forKey: Keys.total.rawValue)
+    
     }
-    
-    
 }

@@ -26,28 +26,28 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var currentQuestion: QuizQuestion?
     
     // Алерт
-    private let alertPresenter = AlertPresenter()
-    
+    private var alertPresenter: ResultAlertPresenter?
+
     // Статистика
-    private let statisticService = StatisticServiceImplementation()
+    private var statisticService: StatisticService = StatisticServiceImplementation()
     
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        alertPresenter = ResultAlertPresenter(alertPresenterDelegate: self)
         questionFactory = QuestionFactory(delegate: self)
-        
         questionFactory?.requestNextQuestion()
     }
     
     // MARK: - QuestionFactoryDelegate
     
+    // Получение следующего вопроса квиза из базы
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else {
             return
         }
-        
         currentQuestion = question
         let viewModel = convert(model: question)
         DispatchQueue.main.async { [weak self] in
@@ -57,6 +57,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     // MARK: - Actions
     
+    // Нажатие на кнопку "Нет"
     @IBAction private func noButtonPressed(_ sender: UIButton) {
         guard let currentQuestion = currentQuestion else {
             return
@@ -65,6 +66,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         showAnswerResult(isAnswerCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     
+    // Нажатие на кнопку "Да"
     @IBAction private func yesButtonPressed(_ sender: UIButton) {
         guard let currentQuestion = currentQuestion else {
             return
@@ -75,12 +77,36 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     // MARK: - Private functions
     
+    // Показ результата игры
+    private func show(quiz result: QuizResultsViewModel) {
+        statisticService.store(correct: correctAnswers, total: questionsAmount)
+        let bestGame = statisticService.bestGame
+        let totalGamesCountText = "\nКоличество сыгранных квизов: \(statisticService.gamesCount)"
+        let recordText = "\nРекорд: \(bestGame.correct)/\(questionsAmount) (\(bestGame.date.dateTimeString))"
+        let accuracyText = "\nСредняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%"
+        
+        let alerModel = AlertModel(
+            title: result.title,
+            message: result.text + totalGamesCountText + recordText + accuracyText,
+            buttonText: result.buttonText) { [weak self] in
+                guard let self = self else {
+                    return
+                }
+                self.currentQuestionIndex = 0
+                self.correctAnswers = 0
+                self.questionFactory?.requestNextQuestion()
+            }
+        alertPresenter?.showAlert(with: alerModel)
+    }
+    
+    // Показ вопроса квиза на экране
     private func show(quiz step: QuizStepViewModel) {
         self.filmPosterImageView.image = step.image
         self.questionTextLabel.text = step.question
         self.questionNumberLabel.text = "\(currentQuestionIndex + 1)/\(questionsAmount)"
     }
     
+    // Конвертация модели вопроса квиза в модель для отображения след вопроса на экране
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         QuizStepViewModel(
             image: UIImage(named: model.image) ?? UIImage(),
@@ -88,11 +114,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
     
+    // Результат ответа пользователя на вопрос квиза
     private func showAnswerResult(isAnswerCorrect: Bool) {
         if isAnswerCorrect {
             correctAnswers += 1
         }
-        
         filmPosterImageView.layer.masksToBounds = true
         filmPosterImageView.layer.borderWidth = 8
         filmPosterImageView.layer.borderColor = isAnswerCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
@@ -110,19 +136,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
     }
     
+    // Показ следующего вопрос квиза или результата игры
     private func showNextQuestionOrResults() {
         if currentQuestionIndex == questionsAmount - 1 {
-            let text = "Ваш результат: \(correctAnswers) из \(questionsAmount)"
-            //ToDo: - к самому алерту в поле message передать сформированный из рекордной игры текст.
-
-            let alertModel = AlertModel(title: "Этот раунд окончен!", message: text, buttonText: "Сыграть ещё раз") { [weak self] _ in
-                guard let self = self else { return }
-                
-                self.currentQuestionIndex = 0
-                self.correctAnswers = 0
-                self.questionFactory?.requestNextQuestion()
-            }
-            alertPresenter.showAlert(in: self, with: alertModel)            
+            let result = QuizResultsViewModel(
+                title: "Этот раунд окончен!",
+                text: "Ваш результат: \(correctAnswers)/\(questionsAmount)",
+                buttonText: "Сыграть ещё раз")
+            show(quiz: result)
         } else {
             currentQuestionIndex += 1
             questionFactory?.requestNextQuestion()
