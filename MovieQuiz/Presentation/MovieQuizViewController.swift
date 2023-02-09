@@ -57,7 +57,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     // MARK: - Actions
     
-    // Нажатие на кнопку "Нет"
     @IBAction private func noButtonPressed(_ sender: UIButton) {
         guard let currentQuestion = currentQuestion else {
             return
@@ -66,7 +65,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         showAnswerResult(isAnswerCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     
-    // Нажатие на кнопку "Да"
     @IBAction private func yesButtonPressed(_ sender: UIButton) {
         guard let currentQuestion = currentQuestion else {
             return
