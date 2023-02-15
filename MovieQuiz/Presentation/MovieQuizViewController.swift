@@ -40,11 +40,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         alertPresenter = ResultAlertPresenter(alertPresenterDelegate: self)
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         
+        activityIndicator.hidesWhenStopped = true
         showLoadingIndicator()
         questionFactory?.loadData()
     }
     
-    // MARK: - QuestionFactoryMelegate
+    // MARK: - QuestionFactoryDelegate
     
     // Получение следующего вопроса квиза из базы
     func didReceiveNextQuestion(question: QuizQuestion?) {
@@ -161,13 +162,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     private func showLoadingIndicator() {
-        activityIndicator.isHidden = false
         activityIndicator.startAnimating()
     }
     
     private func hideLoadingIndicator(){
         activityIndicator.stopAnimating()
-        activityIndicator.isHidden = true
     }
     
     private func showNetworkError(message: String) {

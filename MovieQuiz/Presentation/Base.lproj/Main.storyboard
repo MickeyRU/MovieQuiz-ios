@@ -123,23 +123,24 @@
                                     <constraint firstItem="poP-Re-MdL" firstAttribute="leading" secondItem="jbe-9F-V45" secondAttribute="leading" id="dhT-ms-lvs"/>
                                 </constraints>
                             </stackView>
-                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="JdU-oF-MlD">
-                                <rect key="frame" x="205" y="456" width="20" height="20"/>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="large" translatesAutoresizingMaskIntoConstraints="NO" id="HqH-xS-b15" userLabel="Activity Indicator">
+                                <rect key="frame" x="196.66666666666666" y="447.66666666666669" width="37" height="37"/>
+                                <color key="color" name="YP Background (iOS)"/>
                             </activityIndicatorView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" name="YP Black (iOS)"/>
                         <constraints>
-                            <constraint firstItem="JdU-oF-MlD" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="8vV-xE-vid"/>
+                            <constraint firstItem="HqH-xS-b15" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="4LR-DJ-kXJ"/>
                             <constraint firstItem="jbe-9F-V45" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" constant="-20" id="FGV-6Y-abu"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="jbe-9F-V45" secondAttribute="bottom" id="Ttz-f8-eGy"/>
                             <constraint firstItem="jbe-9F-V45" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="10" id="ccJ-jM-2ce"/>
                             <constraint firstItem="jbe-9F-V45" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="dEk-Ra-yV9"/>
-                            <constraint firstItem="JdU-oF-MlD" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="fbN-m6-Q0F"/>
+                            <constraint firstItem="HqH-xS-b15" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="z1F-XF-bPV"/>
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="activityIndicator" destination="JdU-oF-MlD" id="1qU-sx-BcL"/>
+                        <outlet property="activityIndicator" destination="HqH-xS-b15" id="GFp-xU-VLZ"/>
                         <outlet property="filmPosterImageView" destination="an9-2r-W5L" id="jyi-h0-oGu"/>
                         <outlet property="noButton" destination="O37-Na-29w" id="cXN-Gh-q8X"/>
                         <outlet property="questionLabel" destination="x29-3e-50P" id="mwt-x5-RN7"/>
