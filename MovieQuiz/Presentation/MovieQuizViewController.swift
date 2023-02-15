@@ -6,9 +6,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet private weak var questionNumberLabel: UILabel!
     @IBOutlet private weak var filmPosterImageView: UIImageView!
     @IBOutlet private weak var questionTextLabel: UILabel!
-    
     @IBOutlet private weak var noButton: UIButton!
     @IBOutlet private weak var yesButton: UIButton!
+    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
+    
     
     // Вспомогательная переменная для вычисления номера отображаемого вопроса на экране
     private var currentQuestionIndex: Int = 0
@@ -27,7 +28,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     // Алерт
     private var alertPresenter: ResultAlertPresenter?
-
+    
     // Статистика
     private var statisticService: StatisticService = StatisticServiceImplementation()
     
@@ -37,8 +38,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         super.viewDidLoad()
         
         alertPresenter = ResultAlertPresenter(alertPresenterDelegate: self)
-        questionFactory = QuestionFactory(delegate: self)
-        questionFactory?.requestNextQuestion()
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        
+        activityIndicator.hidesWhenStopped = true
+        showLoadingIndicator()
+        questionFactory?.loadData()
     }
     
     // MARK: - QuestionFactoryDelegate
@@ -55,9 +59,17 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
     }
     
+    func didLoadDataFromServer() {
+        hideLoadingIndicator()
+        questionFactory?.requestNextQuestion()
+    }
+    
+    func didFailToLoadData(with error: Error) {
+        showNetworkError(message: error.localizedDescription)
+    }
+    
     // MARK: - Actions
     
-    // Нажатие на кнопку "Нет"
     @IBAction private func noButtonPressed(_ sender: UIButton) {
         guard let currentQuestion = currentQuestion else {
             return
@@ -66,7 +78,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         showAnswerResult(isAnswerCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     
-    // Нажатие на кнопку "Да"
     @IBAction private func yesButtonPressed(_ sender: UIButton) {
         guard let currentQuestion = currentQuestion else {
             return
@@ -109,7 +120,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // Конвертация модели вопроса квиза в модель для отображения след вопроса на экране
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         QuizStepViewModel(
-            image: UIImage(named: model.image) ?? UIImage(),
+            image: UIImage(data: model.image) ?? UIImage(),
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
@@ -148,5 +159,30 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             currentQuestionIndex += 1
             questionFactory?.requestNextQuestion()
         }
+    }
+    
+    private func showLoadingIndicator() {
+        activityIndicator.startAnimating()
+    }
+    
+    private func hideLoadingIndicator(){
+        activityIndicator.stopAnimating()
+    }
+    
+    private func showNetworkError(message: String) {
+        hideLoadingIndicator()
+        
+        let alertModal = AlertModel(title: "Ошибка",
+                                    message: message,
+                                    buttonText: "Попробовать еще раз") { [weak self] in
+            guard let self = self else { return }
+            
+            self.currentQuestionIndex = 0
+            self.correctAnswers = 0
+            
+            self.questionFactory?.loadData()
+        }
+        
+        alertPresenter?.showAlert(with: alertModal)
     }
 }
