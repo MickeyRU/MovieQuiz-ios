@@ -15,9 +15,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // Фабрика, где происходит генерация вопроса
     private var questionFactory: QuestionFactoryProtocol?
     
-    // Текущий вопрос, отображаемый на экране
-    private var currentQuestion: QuizQuestion?
-    
     // Алерт
     private var alertPresenter: ResultAlertPresenter?
     
@@ -50,7 +47,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             return
         }
         let viewModel = presenter.convert(model: question)
-        currentQuestion = question
+        presenter.currentQuestion = question
         DispatchQueue.main.async { [weak self] in
             self?.show(quiz: viewModel)
         }
@@ -68,19 +65,17 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - Actions
     
     @IBAction private func noButtonPressed(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
         presenter.noButtonPressed()
     }
     
     @IBAction private func yesButtonPressed(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
         presenter.yesButtonPressed()
     }
     
     // MARK: - Private functions
     
     // Показ результата игры
-    private func show(quiz result: QuizResultsViewModel) {
+    func show(quiz result: QuizResultsViewModel) {
         statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
         let bestGame = statisticService.bestGame
         let totalGamesCountText = "\nКоличество сыгранных квизов: \(statisticService.gamesCount)"
@@ -102,7 +97,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     // Показ вопроса квиза на экране
-    private func show(quiz step: QuizStepViewModel) {
+    func show(quiz step: QuizStepViewModel) {
         self.filmPosterImageView.image = step.image
         self.questionTextLabel.text = step.question
         self.questionNumberLabel.text = step.questionNumber
@@ -122,9 +117,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
-            
             self.filmPosterImageView.layer.borderWidth = 0
-            self.showNextQuestionOrResults()
+            self.presenter.questionFactory = self.questionFactory
+            self.presenter.showNextQuestionOrResults()
             self.yesButton.isEnabled = true
             self.noButton.isEnabled = true
         }
