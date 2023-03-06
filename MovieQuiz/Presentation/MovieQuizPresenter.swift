@@ -7,7 +7,19 @@
 
 import UIKit
 
-final class MovieQuizPresenter {
+final class MovieQuizPresenter: QuestionFactoryDelegate {
+    
+    private var questionFactory: QuestionFactoryProtocol?
+    private weak var viewController: MovieQuizViewController?
+    
+    init(viewController: MovieQuizViewController){
+        self.viewController = viewController
+        
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        questionFactory?.loadData()
+        viewController.showLoadingIndicator()
+    }
+
     // Общее число вопросов квиза
     let questionsAmount: Int = 10
     
@@ -18,13 +30,20 @@ final class MovieQuizPresenter {
     var currentQuestion: QuizQuestion?
     
     // Вспомогательная переменная для подсчета данных пользователем верных ответов
-    private var correctAnswers: Int = 0
+    var correctAnswers: Int = 0
     
-    // Фабрика, где происходит генерация вопроса
-    var questionFactory: QuestionFactoryProtocol?
+    // MARK: - QuestionFactoryDelegate
     
-    weak var viewController: MovieQuizViewController?
+    func didLoadDataFromServer() {
+        viewController?.hideLoadingIndicator()
+        questionFactory?.requestNextQuestion()
+    }
     
+    func didFailToLoadData(with error: Error) {
+        let message = error.localizedDescription
+        viewController?.showNetworkError(message: message)
+    }
+        
     // MARK: - Methods
     func yesButtonPressed() {
         didAnswer(isYes: true)
@@ -48,12 +67,20 @@ final class MovieQuizPresenter {
         currentQuestionIndex == questionsAmount - 1
     }
     
-    func resetQuestionIndex() {
+    func restartGame() {
         currentQuestionIndex = 0
+        correctAnswers = 0
+        questionFactory?.requestNextQuestion()
     }
     
     func switchToNextQuestion() {
         currentQuestionIndex += 1
+    }
+    
+    func didAnswer(isCorrectAnswer: Bool) {
+        if isCorrectAnswer {
+            correctAnswers += 1
+        }
     }
     
     // Конвертация модели вопроса квиза в модель для отображения след вопроса на экране
@@ -69,6 +96,7 @@ final class MovieQuizPresenter {
         guard let question = question else {
             return
         }
+        
         currentQuestion = question
         let viewModel = convert(model: question)
         DispatchQueue.main.async { [weak self] in
