@@ -35,6 +35,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         alertPresenter = ResultAlertPresenter(alertPresenterDelegate: self)
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         
+        presenter.viewController = self
+        
         activityIndicator.hidesWhenStopped = true
         showLoadingIndicator()
         questionFactory?.loadData()
@@ -66,19 +68,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - Actions
     
     @IBAction private func noButtonPressed(_ sender: UIButton) {
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
-        let givenAnswer = false
-        showAnswerResult(isAnswerCorrect: givenAnswer == currentQuestion.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.noButtonPressed()
     }
     
     @IBAction private func yesButtonPressed(_ sender: UIButton) {
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
-        let givenAnswer = true
-        showAnswerResult(isAnswerCorrect: givenAnswer == currentQuestion.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.yesButtonPressed()
     }
     
     // MARK: - Private functions
@@ -113,7 +109,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     // Результат ответа пользователя на вопрос квиза
-    private func showAnswerResult(isAnswerCorrect: Bool) {
+    func showAnswerResult(isAnswerCorrect: Bool) {
         if isAnswerCorrect {
             correctAnswers += 1
         }
