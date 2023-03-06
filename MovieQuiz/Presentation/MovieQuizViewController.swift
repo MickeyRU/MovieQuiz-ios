@@ -9,13 +9,8 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private weak var yesButton: UIButton!
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     
-    // Алерт
     private var alertPresenter: ResultAlertPresenter?
     
-    // Статистика
-    private var statisticService: StatisticService = StatisticServiceImplementation()
-    
-    // Презентер
     private var presenter: MovieQuizPresenter!
     
     // MARK: - Lifecycle
@@ -25,11 +20,11 @@ final class MovieQuizViewController: UIViewController {
         
         alertPresenter = ResultAlertPresenter(alertPresenterDelegate: self)
         presenter = MovieQuizPresenter(viewController: self)
-        
         activityIndicator.hidesWhenStopped = true
+        
         showLoadingIndicator()
     }
-
+    
     // MARK: - Actions
     
     @IBAction private func noButtonPressed(_ sender: UIButton) {
@@ -40,61 +35,45 @@ final class MovieQuizViewController: UIViewController {
         presenter.yesButtonPressed()
     }
     
-    // MARK: - Private functions
+    // MARK: - Methods
     
-    // Показ результата игры
-    func show(quiz result: QuizResultsViewModel) {
-        statisticService.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
-        let bestGame = statisticService.bestGame
-        let totalGamesCountText = "\nКоличество сыгранных квизов: \(statisticService.gamesCount)"
-        let recordText = "\nРекорд: \(bestGame.correct)/\(presenter.questionsAmount) (\(bestGame.date.dateTimeString))"
-        let accuracyText = "\nСредняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%"
-        
-        let alerModel = AlertModel(
-            title: result.title,
-            message: result.text + totalGamesCountText + recordText + accuracyText,
-            buttonText: result.buttonText) { [weak self] in
-                guard let self = self else {
-                    return
-                }
-                self.presenter.restartGame()
-            }
-        alertPresenter?.showAlert(with: alerModel)
-    }
-    
-    // Показ вопроса квиза на экране
     func show(quiz step: QuizStepViewModel) {
         self.filmPosterImageView.image = step.image
         self.questionTextLabel.text = step.question
         self.questionNumberLabel.text = step.questionNumber
     }
     
-    // Результат ответа пользователя на вопрос квиза
-    func showAnswerResult(isAnswerCorrect: Bool) {
-        presenter.didAnswer(isCorrectAnswer: isAnswerCorrect)
+    func show(quiz result: QuizResultsViewModel) {
+        let message = presenter.makeResultsMessage()
         
+        let alert = AlertModel(
+            title: result.title,
+            message: message,
+            buttonText: result.buttonText) { [weak self] in
+                guard let self = self else {
+                    return
+                }
+                self.presenter.restartGame()
+            }
+        alertPresenter?.showAlert(with: alert)
+    }
+    
+    func highlightImageBorder(isCorrectAnswer: Bool) {
         filmPosterImageView.layer.masksToBounds = true
         filmPosterImageView.layer.borderWidth = 8
-        filmPosterImageView.layer.borderColor = isAnswerCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
+        filmPosterImageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         
         yesButton.isEnabled = false
         noButton.isEnabled = false
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else { return }
-            self.filmPosterImageView.layer.borderWidth = 0
-            self.presenter.showNextQuestionOrResults()
-            self.yesButton.isEnabled = true
-            self.noButton.isEnabled = true
-        }
     }
     
     func hideLoadingIndicator() {
-           activityIndicator.isHidden = true
-       }
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
+    }
     
     func showLoadingIndicator() {
-        activityIndicator.startAnimating()
+        activityIndicator.stopAnimating()
     }
     
     func showNetworkError(message: String) {
@@ -109,5 +88,12 @@ final class MovieQuizViewController: UIViewController {
         }
         
         alertPresenter?.showAlert(with: alertModal)
+    }
+    
+    func hideImageBorder() {
+        filmPosterImageView.layer.borderWidth = 0
+        
+        yesButton.isEnabled = true
+        noButton.isEnabled = true
     }
 }
