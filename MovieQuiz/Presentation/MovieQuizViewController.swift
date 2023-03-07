@@ -1,6 +1,18 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController {
+protocol MovieQuizViewControllerProtocol: AnyObject {
+    func show(quiz step: QuizStepViewModel)
+    func show(quiz result: QuizResultsViewModel)
+    
+    func highlightImageBorder(isCorrectAnswer: Bool)
+    
+    func showLoadingIndicator()
+    func hideLoadingIndicator()
+    
+    func showNetworkError(message: String)
+}
+
+final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
     @IBOutlet private weak var questionLabel: UILabel!
     @IBOutlet private weak var questionNumberLabel: UILabel!
     @IBOutlet private weak var filmPosterImageView: UIImageView!
@@ -20,7 +32,6 @@ final class MovieQuizViewController: UIViewController {
         
         alertPresenter = ResultAlertPresenter(alertPresenterDelegate: self)
         presenter = MovieQuizPresenter(viewController: self)
-        activityIndicator.hidesWhenStopped = true
         
         showLoadingIndicator()
     }
@@ -68,12 +79,12 @@ final class MovieQuizViewController: UIViewController {
     }
     
     func hideLoadingIndicator() {
-        activityIndicator.isHidden = false
+        activityIndicator.isHidden = true
         activityIndicator.startAnimating()
     }
     
     func showLoadingIndicator() {
-        activityIndicator.stopAnimating()
+        activityIndicator.isHidden = false
     }
     
     func showNetworkError(message: String) {
