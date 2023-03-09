@@ -17,7 +17,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     private var currentQuestion: QuizQuestion?
     private var correctAnswers: Int = 0
     
-    init(viewController: MovieQuizViewControllerProtocol){
+    init(viewController: MovieQuizViewControllerProtocol) {
         self.viewController = viewController as? MovieQuizViewController
         
         statisticService = StatisticServiceImplementation()
@@ -96,7 +96,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         
         let givenAnswer = isYes
         
-        self.proceedWithAnswer(isAnswerCorrect: givenAnswer == currentQuestion.correctAnswer)
+        proceedWithAnswer(isAnswerCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     
     private func proceedWithAnswer(isAnswerCorrect: Bool) {
