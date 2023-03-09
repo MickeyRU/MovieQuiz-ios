@@ -74,8 +74,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         filmPosterImageView.layer.borderWidth = 8
         filmPosterImageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         
-        yesButton.isEnabled = false
-        noButton.isEnabled = false
+        changeButtonsAccess(isEnable: false)
     }
     
     func hideLoadingIndicator() {
@@ -104,7 +103,11 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     func hideImageBorder() {
         filmPosterImageView.layer.borderWidth = 0
         
-        yesButton.isEnabled = true
-        noButton.isEnabled = true
+        changeButtonsAccess(isEnable: true)
+    }
+    
+    private func changeButtonsAccess(isEnable: Bool) {
+        yesButton.isEnabled = isEnable ? true : false
+        noButton.isEnabled = isEnable ? true : false
     }
 }
